@@ -6,6 +6,15 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.utils import plot_model
+from keras.layers import Dense
+from keras import Input
+from keras import Model
+from keras.models import Sequential
+
 
 dataset = requests.get("https://raw.githubusercontent.com/Experience-Monks/nice-color-palettes/master/1000.json") #http request to get data from api
 palettes = json.loads(dataset.text) #converts it into list of palettes
@@ -74,4 +83,13 @@ def palette_visualization(input_colours, output_colours):
   ax.set_yticks([])
   plt.show()
 
+#creating model using the functional API
+nn_input_layer = Input (shape=(6,)) #input layer takes 2 RGB colours x 3 numbers each
+#building hidden layers
+nn_hidden_layer_1 = Dense(64, activation='relu')(nn_input_layer)
+nn_hidden_layer_2 = Dense(32, activation='relu')(nn_hidden_layer_1)
+nn_output_layer = Dense(9, activation = 'sigmoid') (nn_hidden_layer_2)
+
+nn_model = Model (inputs = nn_input_layer, outputs = nn_output_layer) #creates model
+nn_model.compile(loss = 'mse', optimizer = 'adam', metrics = ['mse', 'mae']) #compiling model to prepare for training. Used 2 metrics fro comparison
 
