@@ -1,19 +1,11 @@
 import requests
-import pandas as pd
 import json
 import matplotlib
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
-import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.utils import plot_model
-from keras.layers import Dense
-from keras import Input
-from keras import Model
-from keras.models import Sequential
 
 
 dataset = requests.get("https://raw.githubusercontent.com/Experience-Monks/nice-color-palettes/master/1000.json") #http request to get data from api
@@ -61,8 +53,7 @@ y = np.array (y)
 # set-up of random forest model
 
 seed = 100
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2,
- random_state=seed)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=seed)
 model = RandomForestRegressor(n_estimators=100, random_state=seed)
 model.fit(x_train, y_train)
 
@@ -86,10 +77,26 @@ def palette_visualization(input_colours, output_colours):
 #creating model using the functional API
 nn_input_layer = Input (shape=(6,)) #input layer takes 2 RGB colours x 3 numbers each
 #building hidden layers
-nn_hidden_layer_1 = Dense(64, activation='relu')(nn_input_layer)
-nn_hidden_layer_2 = Dense(32, activation='relu')(nn_hidden_layer_1)
+nn_hidden_layer_1 = Dense(32, activation='relu')(nn_input_layer)
+nn_hidden_layer_2 = Dense(16, activation='relu')(nn_hidden_layer_1)
 nn_output_layer = Dense(9, activation = 'sigmoid') (nn_hidden_layer_2)
 
 nn_model = Model (inputs = nn_input_layer, outputs = nn_output_layer) #creates model
-nn_model.compile(loss = 'mse', optimizer = 'adam', metrics = ['mse', 'mae']) #compiling model to prepare for training. Used 2 metrics fro comparison
+nn_model.compile(loss = 'mse', optimizer = 'adam', metrics = ['mse', 'mae']) #compiling model to prepare for training. Used 2 metrics for comparison
+
+#fits model and saves data to be plotted
+history = nn_model.fit(x_train, y_train, epochs=100, batch_size=32, validation_split=0.1, callbacks=[EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)], verbose=1)
+
+#plot to visualise training vs validation loss
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Training vs. Validation Loss')
+plt.legend()
+plt.show()
+
+#evaluation of model
+test_loss = nn_model.evaluate(x_test, y_test)
+print(test_loss)
 
