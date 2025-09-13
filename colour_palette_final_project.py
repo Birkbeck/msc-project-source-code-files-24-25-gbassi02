@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
+#from sklearn.metrics import mean_squared_error #used during development
 from tensorflow.keras import Input
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense
@@ -47,16 +47,21 @@ for palette in palettes_select:
 x = [] # initialising lists of inputs and outputs
 y = []
 
+dup = set() #to remove duplicates
+
 for palette in palettes_rgb: #makes all unique pairs
   for i in range(5):
     for j in range(i+1, 5):
-      input_colours = palette [i] + palette[j] #puts values in a flat list to use in the models
-      output_colours = []
-      for k in range(5): #makes a list with the values that were not used above to be the output
-        if k != i and k != j:
-          output_colours.extend(palette[k])
-      x.append(input_colours)
-      y.append(output_colours)
+      input_colours = sorted([palette [i] + palette[j]]) #puts values in a flat list to use in the models
+      output_colours = sorted([palette[k] for k in range(5) if k not in (i, j)])
+      pairs = (tuple(input_colours), tuple(output_colours))
+      if pairs not in dup:
+        dup.add(pairs)
+      #for k in range(5): #makes a list with the values that were not used above to be the output
+       # if k != i and k != j:
+        #  output_colours.extend(palette[k])
+      x.append([n for colour in input_colours for n in colour])
+      y.append([n for colour in output_colours for n in colour])
 
 #flattening values into a vector shape to use in the models
 x = np.array(x)
@@ -139,4 +144,3 @@ def main ():
 
 if __name__ == "__main__":
     main()
-
